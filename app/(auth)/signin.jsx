@@ -74,6 +74,7 @@ const SignIn = () => {
                                 <View className="w-full">
                                     <Text className="text-[#f49b33] mt-4 mb-2">Email</Text>
                                     <TextInput
+                                        autoCapitalize="none"
                                         className="h-10 border border-white text-white rounded px-2"
                                         keyboardType="email-address"
                                         onChangeText={handleChange("email")}

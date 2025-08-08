@@ -27,12 +27,14 @@ export default function Profile() {
             await AsyncStorage.removeItem("userEmail");
             setUserEmail(null);
             Alert.alert("Logged out", "You have been logged out successfully.");
+            router.push('/(auth)/signin')
         } catch (error) {
             Alert.alert("Logout Error", "Error while logging out");
         }
     };
 
     const handleSignup = () => {
+        router.push('/(auth)/signup')
     };
 
     return (

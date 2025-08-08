@@ -77,6 +77,7 @@ const Signup = () => {
                                     <TextInput
                                         className="h-10 border border-white text-white rounded px-2"
                                         keyboardType="email-address"
+                                        autoCapitalize="none"
                                         onChangeText={handleChange("email")}
                                         value={values.email}
                                         onBlur={handleBlur("email")}
