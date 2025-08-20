@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, Platform } from "react-native";
-import React, { useState } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useState } from "react";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 const DatePickerComponent = ({ date, setDate }) => {
   const [show, setShow] = useState(false);
 

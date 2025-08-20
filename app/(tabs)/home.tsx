@@ -1,7 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Restaurant } from "@/types";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
-import React from "react";
+import { collection, getDocs, query } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,18 +17,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import logo from "../../assets/images/dinetimelogo.png";
 import banner from "../../assets/images/homeBanner.png";
-import { restaurants } from "../../store/restaurants";
+import { db } from "../../config/firebaseConfig";
+
 const Home = () => {
   const router = useRouter();
-  // const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const temp = async () => {
-    const value = await AsyncStorage.getItem("isGuest");
-    const email = await AsyncStorage.getItem("userEmail");
-    console.log(value, email);
-  };
-
-  const renderItem = ({ item }: any) => (
+  const renderItem = ({ item }: { item: Restaurant }) => (
     <TouchableOpacity
       onPress={() => router.push(`/restaurants/${item.name}`)}
       className="bg-[#5f5f5f] max-h-64 max-w-xs flex justify-center rounded-lg p-4 mx-4 shadow-md"
@@ -45,51 +42,34 @@ const Home = () => {
     </TouchableOpacity>
   );
 
-  // 🔹 Replace Firebase with dummy static data
-  // const getRestaurants = async () => {
-  //   const dummyData = [
-  //     {
-  //       id: "1",
-  //       name: "The Spice House",
-  //       image:
-  //         "https://images.unsplash.com/photo-1555992336-cbfdb0b55c9c?w=800",
-  //       address: "123 Main Street",
-  //       opening: "10:00 AM",
-  //       closing: "10:00 PM",
-  //     },
-  //     {
-  //       id: "2",
-  //       name: "Ocean Breeze",
-  //       image:
-  //         "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800",
-  //       address: "456 Beach Road",
-  //       opening: "09:00 AM",
-  //       closing: "11:00 PM",
-  //     },
-  //     {
-  //       id: "3",
-  //       name: "Mountain Dine",
-  //       image:
-  //         "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800",
-  //       address: "789 Hill View",
-  //       opening: "08:00 AM",
-  //       closing: "09:00 PM",
-  //     },
-  //   ];
-  //   setRestaurants(dummyData);
-  // };
+  const getRestaurants = async () => {
+    try {
+      const q = query(collection(db, "restaurants"));
+      const res = await getDocs(q);
 
-  // useEffect(() => {
-  //   getRestaurants();
-  //   temp();
-  // }, []);
+      const fetchedRestaurants: Restaurant[] = res.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Restaurant[];
+
+      setRestaurants(fetchedRestaurants);
+    } catch (error) {
+      console.error("Error fetching restaurants:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getRestaurants();
+  }, []);
 
   return (
     <SafeAreaView
       style={[
         { backgroundColor: "#2b2b2b" },
-        Platform.OS == "android" && { paddingBottom: 55 },
-        Platform.OS == "ios" && { paddingBottom: 20 },
+        Platform.OS === "android" && { paddingBottom: 55 },
+        Platform.OS === "ios" && { paddingBottom: 20 },
       ]}
     >
       <View className="flex items-center">
@@ -97,7 +77,7 @@ const Home = () => {
           <View className="flex flex-row">
             <Text
               className={`text-base h-10
-                ${Platform.OS == "ios" ? "pt-[8px]" : "pt-1"}
+                ${Platform.OS === "ios" ? "pt-[8px]" : "pt-1"}
                align-middle text-white`}
             >
               {" "}
@@ -107,6 +87,7 @@ const Home = () => {
           </View>
         </View>
       </View>
+
       <ScrollView stickyHeaderIndices={[0]}>
         <ImageBackground
           resizeMode="cover"
@@ -123,12 +104,16 @@ const Home = () => {
             </Text>
           </BlurView>
         </ImageBackground>
+
         <View className="p-4 bg-[#2b2b2b] flex-row items-center">
           <Text className="text-3xl text-white mr-2 font-semibold">
             Special Discount %
           </Text>
         </View>
-        {restaurants.length > 0 ? (
+
+        {loading ? (
+          <ActivityIndicator animating color={"#fb9b33"} size="large" />
+        ) : (
           <FlatList
             data={restaurants}
             renderItem={renderItem}
@@ -136,17 +121,18 @@ const Home = () => {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: 16 }}
             showsHorizontalScrollIndicator={false}
-            scrollEnabled={true}
           />
-        ) : (
-          <ActivityIndicator animating color={"#fb9b33"} />
         )}
+
         <View className="p-4 bg-[#2b2b2b] flex-row items-center">
           <Text className="text-3xl text-[#fb9b33] mr-2 font-semibold">
             Our Restaurants
           </Text>
         </View>
-        {restaurants.length > 0 ? (
+
+        {loading ? (
+          <ActivityIndicator animating color={"#fb9b33"} size="large" />
+        ) : (
           <FlatList
             data={restaurants}
             renderItem={renderItem}
@@ -154,13 +140,11 @@ const Home = () => {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: 16 }}
             showsHorizontalScrollIndicator={false}
-            scrollEnabled={true}
           />
-        ) : (
-          <ActivityIndicator animating color={"#fb9b33"} />
         )}
       </ScrollView>
     </SafeAreaView>
   );
 };
+
 export default Home;

@@ -1,5 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 const GuestPickerComponent = ({ selectedNumber, setSelectedNumber }) => {
   const decrement = () => {

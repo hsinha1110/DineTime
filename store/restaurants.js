@@ -307,4 +307,4 @@ const slots = [
   },
 ];
 
-export { restaurants, carouselImages, slots };
+export { carouselImages, restaurants, slots };
