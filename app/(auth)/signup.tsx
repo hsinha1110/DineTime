@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { doc, getFirestore, setDoc } from "firebase/firestore";
 import { Formik } from "formik";
 import React from "react";
 import {
@@ -19,21 +21,47 @@ const entryImg = require("../../assets/images/Frame.png");
 
 const Signup = () => {
   const router = useRouter();
+  const auth = getAuth();
+  const db = getFirestore();
 
   const handleGuest = async () => {
     await AsyncStorage.setItem("isGuest", "true");
     router.push("/home");
   };
+  const handleSignup = async (values: { email: string; password: string }) => {
+    try {
+      const userCredentials = await createUserWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      const user = userCredentials.user;
 
-  const handleSignin = async (values: { email: string; password: string }) => {
-    // Abhi sirf validation check + dummy alert
-    Alert.alert(
-      "Form Submitted",
-      `Email: ${values.email}\nPassword: ${values.password}`,
-      [{ text: "OK" }]
-    );
+      await setDoc(doc(db, "users", user.uid), {
+        email: values.email,
+        createdAt: new Date(),
+      });
+
+      await AsyncStorage.setItem("userEmail", values.email);
+      await AsyncStorage.setItem("isGuest", "false");
+
+      router.push("/home");
+    } catch (error: any) {
+      if (error.code === "auth/email-already-in-use") {
+        Alert.alert(
+          "Signup Failed!",
+          "This email address is already in use. Please use a different email.",
+          [{ text: "OK" }]
+        );
+      } else {
+        Alert.alert(
+          "Signup Error",
+          "An unexpected error occurred. Please try again later.",
+          [{ text: "OK" }]
+        );
+      }
+    }
   };
-
   return (
     <SafeAreaView className={`bg-[#2b2b2b]`}>
       <ScrollView contentContainerStyle={{ height: "100%" }}>
@@ -47,7 +75,7 @@ const Signup = () => {
             <Formik
               initialValues={{ email: "", password: "" }}
               validationSchema={validationSchema}
-              onSubmit={handleSignin}
+              onSubmit={handleSignup}
             >
               {({
                 handleChange,

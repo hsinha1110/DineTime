@@ -31,8 +31,8 @@ const Restaurant = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedNumber, setSelectedNumber] = useState(2);
   const [date, setDate] = useState(new Date());
+  
   // Fetching restaurant, carousel and slot data
-   // Fetch restaurant, carousel, and slot data
   const getRestaurantData = async () => {
     try {
       const restaurantQuery = query(

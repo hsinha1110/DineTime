@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { Formik } from "formik";
 import React from "react";
 import {
@@ -20,18 +22,47 @@ const entryImg = require("../../assets/images/Frame.png");
 const SignIn = () => {
   const router = useRouter();
 
+  const auth = getAuth();
+  const db = getFirestore();
   const handleGuest = async () => {
     await AsyncStorage.setItem("isGuest", "true");
     router.push("/home");
   };
-
   const handleSignin = async (values: { email: string; password: string }) => {
-    // Abhi sirf validation check + dummy alert
-    Alert.alert(
-      "Form Submitted",
-      `Email: ${values.email}\nPassword: ${values.password}`,
-      [{ text: "OK" }]
-    );
+    try {
+      const userCredentials = await signInWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      const user = userCredentials.user;
+
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        console.log("User data:", userDoc.data());
+        await AsyncStorage.setItem("userEmail", values.email);
+        await AsyncStorage.setItem("isGuest", "false");
+        router.push("/home");
+      } else {
+        console.log("No such Doc");
+      }
+    } catch (error: any) {
+      console.log(error);
+
+      if (error.code === "auth/invalid-credential") {
+        Alert.alert(
+          "Signin Failed!",
+          "Incorrect credentials. Please try again.",
+          [{ text: "OK" }]
+        );
+      } else {
+        Alert.alert(
+          "Sign in Error",
+          "An unexpected error occurred. Please try again later.",
+          [{ text: "OK" }]
+        );
+      }
+    }
   };
 
   return (
